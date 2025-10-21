@@ -26,8 +26,8 @@ class Lexer:
         # The order is important, as it determines matching priority.
         self.token_specs = [
             ('NUMBER',     r'\d+'),
-            ('IDENTIFIER', r'[A-Za-z_][A-Za-z0-9_]*'),
             ('IF',         r'if'),
+            ('IDENTIFIER', r'[A-Za-z_][A-Za-z0-9_]*'),
             ('ELSE',       r'else'),
             ('FOR',        r'for'),
             ('TO',         r'to'),
@@ -72,6 +72,26 @@ class Lexer:
         The process ends when the entire code string is consumed, at which point an
         'EOF' (End of File) token is appended to signify the end of the input.
         """
+
+        print("TOKENIZING CODE: ", self.code)
+
+        tokens = list()
+
+        matches = re.finditer(self.token_regex, self.code)
+        for match in matches:
+            print(match.group())
+            print(match.groupdict())
+            print("\n")
+            token = (match.lastgroup, match.group())
+            tokens.append(token)
+
+        tokens.append(("EOF", ""))
+
+        print("TOKENS: ")
+        for token in tokens:
+            print(token)
+
+        return tokens
 
 
 class Parser:
@@ -126,6 +146,7 @@ class Parser:
         the resulting AST node to the list. Finally, it returns the list of statement
         nodes, which represents the complete program.
         """
+        print("PARSING")
         statements = []
         while self.current_token()[0] != 'EOF':
             statements.append(self.parse_statement())
@@ -146,7 +167,26 @@ class Parser:
         - If it's a 'PRINT', it calls `parse_print_stmt()`.
         This routing is the essence of a top-down recursive descent parser.
         """
-        pass
+        current_token = self.current_token()
+        match current_token[0]:
+            case "IDENTIFIER":
+                id = current_token[1]
+                print("IDENTIFIER FOUND")
+                while current_token[0] != ("NUMBER" or "IDENTIFIER" or "LPAREN"):
+                    print("CONSUMED TOKEN ", current_token)
+                    self.pos += 1
+                    current_token = self.current_token()
+                print("EXPRESSION FOUND ", current_token)
+                if current_token[0] == "NUMBER":
+                    print(Assignment(id, current_token[1]).to_string())
+
+            case "IF":
+                pass
+            case "FOR":
+                pass
+            case "PRINT":
+                pass
+        self.pos += 1
 
     # TODO: Implement this function
     def parse_if_stmt(self) -> IfStatement:
@@ -160,7 +200,7 @@ class Parser:
         handle the optional else part, which also has a colon and a block. It constructs and
         returns an `IfStatement` AST node with the condition, then-block, and optional else-block.
         """
-        pass
+        print("PARSING IF")
 
     # TODO: Implement this function
     def parse_for_stmt(self) -> ForStatement:
