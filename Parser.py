@@ -336,7 +336,16 @@ class Parser:
         recursively calls `parse_factor()` for the operand, and returns a `UnaryOperation` node.
         If not, it calls `parse_primary()` for the highest-precedence elements.
         """
-        pass
+        if self.current_token()[0] == "PLUS":
+            self.expect("PLUS")
+            operand = self.parse_factor()
+            return UnaryOperation("+", operand)
+        elif self.current_token()[0] == "MINUS":
+            self.expect("MINUS")
+            operand = self.parse_factor()
+            return UnaryOperation("-", operand)
+        else:
+            return self.parse_primary()
 
     # TODO: Implement this function
     def parse_primary(self) -> ExprType:
