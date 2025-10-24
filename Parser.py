@@ -167,26 +167,7 @@ class Parser:
         - If it's a 'PRINT', it calls `parse_print_stmt()`.
         This routing is the essence of a top-down recursive descent parser.
         """
-        current_token = self.current_token()
-        match current_token[0]:
-            case "IDENTIFIER":
-                id = current_token[1]
-                print("IDENTIFIER FOUND")
-                while current_token[0] != ("NUMBER" or "IDENTIFIER" or "LPAREN"):
-                    print("CONSUMED TOKEN ", current_token)
-                    self.pos += 1
-                    current_token = self.current_token()
-                print("EXPRESSION FOUND ", current_token)
-                if current_token[0] == "NUMBER":
-                    print(Assignment(id, current_token[1]).to_string())
-
-            case "IF":
-                pass
-            case "FOR":
-                pass
-            case "PRINT":
-                pass
-        self.pos += 1
+        pass
 
     # TODO: Implement this function
     def parse_if_stmt(self) -> IfStatement:
@@ -324,7 +305,7 @@ class Parser:
         What this function does: It calls `parse_factor()` to get its operands and loops on
         '*', '/', and '%' operators. This ensures that `a + b * c` is correctly parsed as `a + (b * c)`.
         """
-        pass
+        self.parse_factor()
 
     # TODO: Implement this function
     def parse_factor(self) -> ExprType:
