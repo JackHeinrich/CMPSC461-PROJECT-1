@@ -359,5 +359,6 @@ class Parser:
             case "IDENTIFIER":
                 return self.expect("IDENTIFIER")
             case "LPAREN":
+                self.expect("LPAREN")
                 print("Parsing LPAREN hasn't been implemented yet.")
                 pass
