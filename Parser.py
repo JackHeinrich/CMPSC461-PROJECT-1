@@ -73,23 +73,14 @@ class Lexer:
         'EOF' (End of File) token is appended to signify the end of the input.
         """
 
-        print("TOKENIZING CODE: ", self.code)
-
         tokens = list()
 
         matches = re.finditer(self.token_regex, self.code)
         for match in matches:
-            print(match.group())
-            print(match.groupdict())
-            print("\n")
             token = (match.lastgroup, match.group())
             tokens.append(token)
 
         tokens.append(("EOF", ""))
-
-        print("TOKENS: ")
-        for token in tokens:
-            print(token)
 
         return tokens
 
@@ -146,10 +137,11 @@ class Parser:
         the resulting AST node to the list. Finally, it returns the list of statement
         nodes, which represents the complete program.
         """
-        print("PARSING")
+        print("PARSING: \n")
         statements = []
         while self.current_token()[0] != 'EOF':
             statements.append(self.parse_statement())
+        print(statements)
         return statements
 
     # TODO: Implement this function
@@ -167,7 +159,15 @@ class Parser:
         - If it's a 'PRINT', it calls `parse_print_stmt()`.
         This routing is the essence of a top-down recursive descent parser.
         """
-        pass
+        print("FOUND TOKEN: ", self.current_token(), "\n")
+
+        while self.current_token()[0] == "SKIP":
+            self.advance()
+
+        if self.current_token()[0] == "IDENTIFIER":
+            pass
+
+        self.advance()
 
     # TODO: Implement this function
     def parse_if_stmt(self) -> IfStatement:
