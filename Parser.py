@@ -352,4 +352,12 @@ class Parser:
            to parse the entire expression inside the parentheses, and then expects a closing 'RPAREN'.
            This allows for manually overriding operator precedence (e.g., `(a + b) * c`).
         """
-        pass
+
+        match self.current_token()[0]:
+            case "NUMBER":
+                return self.expect("NUMBER")
+            case "IDENTIFIER":
+                return self.expect("IDENTIFIER")
+            case "LPAREN":
+                print("Parsing LPAREN hasn't been implemented yet.")
+                pass
