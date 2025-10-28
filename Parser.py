@@ -394,5 +394,5 @@ class Parser:
                 return self.expect("IDENTIFIER")
             case "LPAREN":
                 self.expect("LPAREN")
-                print("Parsing LPAREN hasn't been implemented yet.")
-                pass
+                self.parse_boolean_expression()
+                self.expect("RPAREN")
