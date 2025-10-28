@@ -348,6 +348,8 @@ class Parser:
         '*', '/', and '%' operators. This ensures that `a + b * c` is correctly parsed as `a + (b * c)`.
         """
         self.parse_factor()
+        while self.current_token()[0] == "MULTIPLY" or self.current_token()[0] == "DIVIDE" or self.current_token()[0] == "MODULO":
+            pass
 
     # TODO: Implement this function
     def parse_factor(self) -> ExprType:
