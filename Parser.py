@@ -269,7 +269,10 @@ class Parser:
         wraps it in a `UnaryOperation` node. If there is no 'NOT', it simply calls the next
         level of the precedence hierarchy, `parse_comparison()`.
         """
-        pass
+        if self.current_token()[0] == "NOT":
+            return UnaryOperation(self.expect("NOT"), self.parse_boolean_factor())
+        else:
+            return self.parse_comparison()
 
     # TODO: Implement this function
     def parse_comparison(self) -> ExprType:
