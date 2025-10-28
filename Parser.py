@@ -243,7 +243,12 @@ class Parser:
         continues as long as the current token is a 'COMMA'. Inside the loop, it consumes the
         comma and parses the next expression. It returns a list of all the parsed expression nodes.
         """
-        pass
+        expressions = []
+        expressions.append(self.parse_expression())
+        while self.current_token()[0] == "COMMA":
+            self.expect("COMMA")
+            expressions.append(self.parse_expression())
+        return expressions
 
     # TODO: Implement this function
     def parse_boolean_expression(self) -> ExprType:
