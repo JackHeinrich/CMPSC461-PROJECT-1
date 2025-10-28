@@ -27,7 +27,6 @@ class Lexer:
         self.token_specs = [
             ('NUMBER',     r'\d+'),
             ('IF',         r'if'),
-            ('IDENTIFIER', r'[A-Za-z_][A-Za-z0-9_]*'),
             ('ELSE',       r'else'),
             ('FOR',        r'for'),
             ('TO',         r'to'),
@@ -35,6 +34,7 @@ class Lexer:
             ('AND',        r'and'),
             ('OR',         r'or'),
             ('NOT',        r'not'),
+            ('IDENTIFIER', r'[A-Za-z_][A-Za-z0-9_]*'),
             ('PLUS',       r'\+'),
             ('MINUS',      r'-'),
             ('MULTIPLY',   r'\*'),
@@ -141,7 +141,9 @@ class Parser:
         statements = []
         while self.current_token()[0] != 'EOF':
             statements.append(self.parse_statement())
-        print(statements)
+        print("STATEMENTS: ", statements)
+        for statement in statements:
+            print(statement.to_string())
         return statements
 
     # TODO: Implement this function
@@ -159,17 +161,27 @@ class Parser:
         - If it's a 'PRINT', it calls `parse_print_stmt()`.
         This routing is the essence of a top-down recursive descent parser.
         """
-        print("FOUND TOKEN: ", self.current_token(), "\n")
 
         while self.current_token()[0] == "SKIP":
-            self.advance()
+            self.expect("SKIP")
 
         if self.current_token()[0] == "IDENTIFIER":
-            pass
-
-        self.advance()
+            print("PARSING IDENTIFIER: ")
+            id_token = self.expect("IDENTIFIER")
+            self.expect("SKIP")
+            self.expect("EQUALS")
+            self.expect("SKIP")
+            expression = self.parse_expression()
+            return Assignment(id_token, expression)
+        elif self.current_token()[0] == "IF":
+            return self.parse_if_stmt()
+        elif self.current_token()[0] == "FOR":
+            return self.parse_for_stmt()
+        elif self.current_token()[0] == "PRINT":
+            return self.parse_print_stmt()
 
     # TODO: Implement this function
+
     def parse_if_stmt(self) -> IfStatement:
         """
         Why this function is needed: To parse the structure of an if-else statement according
@@ -181,7 +193,24 @@ class Parser:
         handle the optional else part, which also has a colon and a block. It constructs and
         returns an `IfStatement` AST node with the condition, then-block, and optional else-block.
         """
-        print("PARSING IF")
+        print("PARSING IF: ")
+
+        self.expect("IF")
+        self.expect("SKIP")
+        condition = self.parse_boolean_expression()
+        print("CONDITION: ", condition.to_string())
+        self.expect("COLON")
+        then = self.parse_block()
+        print("THEN BLOCK: ", then.to_string())
+        else_block = None
+        if (self.current_token()[0] == "ELSE"):
+            self.expect("ELSE")
+            self.expect("COLON")
+            else_block = self.parse_block()
+
+        print("ELSE BLOCK: ", else_block.to_string())
+
+        return IfStatement(condition, then, else_block)
 
     # TODO: Implement this function
     def parse_for_stmt(self) -> ForStatement:
@@ -193,12 +222,20 @@ class Parser:
         'TO', an expression for the end value, and a 'COLON'. Finally, it calls `parse_block()`
         for the loop's body. It bundles all this information into a `ForStatement` AST node.
         """
+        print("PARSING FOR")
         self.expect("FOR")
+        self.expect("SKIP")
+        iterator = self.expect("IDENTIFIER")
+        self.expect("SKIP")
         self.expect("EQUALS")
+        start_expr = self.parse_expression()
+        self.expect("SKIP")
         self.expect("TO")
+        self.expect("SKIP")
+        end_expr = self.parse_expression()
         self.expect("COLON")
         block = self.parse_block()
-        return ForStatement(block)
+        return ForStatement(iterator, start_expr, end_expr, block)
 
     # TODO: Implement this function
     def parse_print_stmt(self) -> PrintStatement:
@@ -210,6 +247,7 @@ class Parser:
         parentheses. Finally, it consumes the closing parenthesis 'RPAREN' and returns a
         `PrintStatement` AST node containing the list of arguments.
         """
+        print("PARSING PRINT")
         self.expect("PRINT")
         self.expect("LPAREN")
         args = self.parse_arg_list()
@@ -227,9 +265,14 @@ class Parser:
         of the block (in our simplified language, 'ELSE' or the end of the file). It returns a
         `Block` AST node containing the list of parsed statements.
         """
+        print("PARSING BLOCK")
         statements = []
         while self.current_token()[0] != "ELSE" and self.current_token()[0] != "EOF":
-            statements.append(self.parse_statement())
+            if self.current_token()[0] == "SKIP":
+                self.advance()
+                continue
+            statement = self.parse_statement()
+            statements.append(statement)
 
         return Block(statements)
 
@@ -243,6 +286,7 @@ class Parser:
         continues as long as the current token is a 'COMMA'. Inside the loop, it consumes the
         comma and parses the next expression. It returns a list of all the parsed expression nodes.
         """
+        print("PARSING ARG LIST")
         expressions = []
         expressions.append(self.parse_expression())
         while self.current_token()[0] == "COMMA":
@@ -262,9 +306,15 @@ class Parser:
         node with the left side, the 'OR' operator, and the result of parsing the right side.
         This left-associative structure correctly handles chains like `A or B or C`.
         """
+        print("PARSING BOOLEAN EXPRESSION")
         lhs = self.parse_boolean_term()
+
         while self.current_token()[0] == "OR":
-            pass
+            operator = self.expect("OR")
+            rhs = self.parse_expression()
+            lhs = LogicalOperation(lhs, operator, rhs)
+
+        return lhs
 
     # TODO: Implement this function
     def parse_boolean_term(self) -> ExprType:
@@ -276,9 +326,15 @@ class Parser:
         it deals with the 'AND' operator and calls `parse_boolean_factor()` for its operands.
         This ensures that expressions like `A and B or C` are parsed as `(A and B) or C`.
         """
+        print("PARSING BOOLEAN TERM")
         lhs = self.parse_boolean_factor()
+
         while self.current_token()[0] == "AND":
-            pass
+            operator = self.expect("AND")
+            rhs = self.parse_boolean_factor()
+            lhs = LogicalOperation(lhs, operator, rhs)
+
+        return lhs
 
     # TODO: Implement this function
     def parse_boolean_factor(self) -> ExprType:
@@ -291,8 +347,11 @@ class Parser:
         wraps it in a `UnaryOperation` node. If there is no 'NOT', it simply calls the next
         level of the precedence hierarchy, `parse_comparison()`.
         """
+        print("PARSING BOOLEAN FACTOR")
         if self.current_token()[0] == "NOT":
-            return UnaryOperation(self.expect("NOT"), self.parse_boolean_factor())
+            op = self.expect("NOT")
+            operand = self.parse_boolean_factor()
+            return UnaryOperation(op, operand)
         else:
             return self.parse_comparison()
 
@@ -307,7 +366,9 @@ class Parser:
         `parse_expression()` again for the right-hand side, creating a `BinaryOperation` node.
         If not, it just returns the left-hand side node it already parsed.
         """
+        print("PARSING COMPARISON")
         lhs = self.parse_expression()
+        self.expect("SKIP")
         op = None
         if self.current_token()[0] == "EQ":
             op = self.expect("EQ")
@@ -320,11 +381,12 @@ class Parser:
         else:
             return lhs
 
+        self.expect("SKIP")
+
         rhs = self.parse_expression()
         return BinaryOperation(lhs, op, rhs)
 
     # TODO: Implement this function
-
     def parse_expression(self) -> ExprType:
         """
         Why this function is needed: To handle the lowest precedence arithmetic operators:
@@ -334,9 +396,20 @@ class Parser:
         calls `parse_term()` to get a higher-precedence operand. It then loops as long as it
         sees a 'PLUS' or 'MINUS' token, building `BinaryOperation` nodes in a left-associative way.
         """
-        self.parse_term()
+        print("PARSING EXPRESSION")
+        lhs = self.parse_term()
         while self.current_token()[0] == "PLUS" or self.current_token()[0] == "MINUS":
-            pass
+            op = None
+            if self.current_token()[0] == "PLUS":
+                op = self.expect("PLUS")
+            elif self.current_token()[0] == "MINUS":
+                op = self.expect("MINUS")
+
+            rhs = self.parse_expression()
+
+            lhs = BinaryOperation(lhs, op, rhs)
+
+        return lhs
 
     # TODO: Implement this function
     def parse_term(self) -> ExprType:
@@ -347,11 +420,25 @@ class Parser:
         What this function does: It calls `parse_factor()` to get its operands and loops on
         '*', '/', and '%' operators. This ensures that `a + b * c` is correctly parsed as `a + (b * c)`.
         """
-        self.parse_factor()
+        print("PARSING TERM")
+        lhs = self.parse_factor()
         while self.current_token()[0] == "MULTIPLY" or self.current_token()[0] == "DIVIDE" or self.current_token()[0] == "MODULO":
-            pass
+            op = None
+            if self.current_token()[0] == "MULTIPLY":
+                op = self.expect("MULTIPLY")
+            elif self.current_token()[0] == "DIVIDE":
+                op = self.expect("DIVIDE")
+            elif self.current_token()[0] == "MODULO":
+                op = self.expect("MODULO")
+
+            rhs = self.parse_expression()
+
+            lhs = BinaryOperation(lhs, op, rhs)
+
+        return lhs
 
     # TODO: Implement this function
+
     def parse_factor(self) -> ExprType:
         """
         Why this function is needed: To handle unary plus and minus operators (e.g., `-5`).
@@ -361,6 +448,7 @@ class Parser:
         recursively calls `parse_factor()` for the operand, and returns a `UnaryOperation` node.
         If not, it calls `parse_primary()` for the highest-precedence elements.
         """
+        print("PARSING FACTOR")
         if self.current_token()[0] == "PLUS":
             self.expect("PLUS")
             operand = self.parse_factor()
@@ -387,6 +475,7 @@ class Parser:
            This allows for manually overriding operator precedence (e.g., `(a + b) * c`).
         """
 
+        print("PARSING PRIMARY")
         match self.current_token()[0]:
             case "NUMBER":
                 return self.expect("NUMBER")
@@ -394,5 +483,6 @@ class Parser:
                 return self.expect("IDENTIFIER")
             case "LPAREN":
                 self.expect("LPAREN")
-                self.parse_boolean_expression()
+                expression = self.parse_boolean_expression()
                 self.expect("RPAREN")
+                return expression
