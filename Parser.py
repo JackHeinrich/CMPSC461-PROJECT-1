@@ -274,7 +274,9 @@ class Parser:
         it deals with the 'AND' operator and calls `parse_boolean_factor()` for its operands.
         This ensures that expressions like `A and B or C` are parsed as `(A and B) or C`.
         """
-        pass
+        lhs = self.parse_boolean_factor()
+        while self.current_token()[0] == "AND":
+            pass
 
     # TODO: Implement this function
     def parse_boolean_factor(self) -> ExprType:
