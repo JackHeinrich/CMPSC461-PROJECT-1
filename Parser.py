@@ -193,7 +193,12 @@ class Parser:
         'TO', an expression for the end value, and a 'COLON'. Finally, it calls `parse_block()`
         for the loop's body. It bundles all this information into a `ForStatement` AST node.
         """
-        pass
+        self.expect("FOR")
+        self.expect("EQUALS")
+        self.expect("TO")
+        self.expect("COLON")
+        block = self.parse_block()
+        return ForStatement(block)
 
     # TODO: Implement this function
     def parse_print_stmt(self) -> PrintStatement:
