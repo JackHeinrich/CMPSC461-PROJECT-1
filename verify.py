@@ -20,8 +20,6 @@ def run_test(test_name, test_input, expected_output):
         # Convert the AST to string format using to_string() for comparison
         result = ""
         for node in ast:
-            print("NEW NODE")
-            print("NODE: ", node.to_string())
             result += node.to_string()
 
         # Remove all spaces and newlines for a clean comparison
