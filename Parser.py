@@ -307,7 +307,22 @@ class Parser:
         `parse_expression()` again for the right-hand side, creating a `BinaryOperation` node.
         If not, it just returns the left-hand side node it already parsed.
         """
-        pass
+        lhs = self.parse_expression()
+        op = None
+        if self.current_token()[0] == "EQ":
+            op = self.expect("EQ")
+        elif self.current_token()[0] == "NEQ":
+            op = self.expect("NEQ")
+        elif self.current_token()[0] == "GREATER":
+            op = self.expect("GREATER")
+        elif self.current_token()[0] == "LESS":
+            op = self.expect("LESS")
+        else:
+            return lhs
+
+        rhs = self.parse_expression()
+        return BinaryOperation(lhs, op, rhs)
+
 
     # TODO: Implement this function
     def parse_expression(self) -> ExprType:
