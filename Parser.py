@@ -323,8 +323,8 @@ class Parser:
         rhs = self.parse_expression()
         return BinaryOperation(lhs, op, rhs)
 
-
     # TODO: Implement this function
+
     def parse_expression(self) -> ExprType:
         """
         Why this function is needed: To handle the lowest precedence arithmetic operators:
@@ -334,7 +334,9 @@ class Parser:
         calls `parse_term()` to get a higher-precedence operand. It then loops as long as it
         sees a 'PLUS' or 'MINUS' token, building `BinaryOperation` nodes in a left-associative way.
         """
-        pass
+        self.parse_term()
+        while self.current_token()[0] == "PLUS" or self.current_token()[0] == "MINUS":
+            pass
 
     # TODO: Implement this function
     def parse_term(self) -> ExprType:
