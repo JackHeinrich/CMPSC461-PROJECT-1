@@ -227,7 +227,11 @@ class Parser:
         of the block (in our simplified language, 'ELSE' or the end of the file). It returns a
         `Block` AST node containing the list of parsed statements.
         """
-        pass
+        statements = []
+        while self.current_token()[0] != "ELSE" and self.current_token()[0] != "EOF":
+            statements.append(self.parse_statement())
+
+        return Block(statements)
 
     # TODO: Implement this function
     def parse_arg_list(self) -> List[ExprType]:
