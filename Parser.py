@@ -262,7 +262,9 @@ class Parser:
         node with the left side, the 'OR' operator, and the result of parsing the right side.
         This left-associative structure correctly handles chains like `A or B or C`.
         """
-        pass
+        lhs = self.parse_boolean_term()
+        while self.current_token()[0] == "OR":
+            pass
 
     # TODO: Implement this function
     def parse_boolean_term(self) -> ExprType:
